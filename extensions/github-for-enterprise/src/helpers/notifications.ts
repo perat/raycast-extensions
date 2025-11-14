@@ -14,7 +14,22 @@ function generateNotificationReferrerId(notificationId: string, userId: string) 
 }
 
 export function generateGitHubUrl(url: string, notificationId: string, userId?: string, comment = "") {
-  let newUrl: string = url.replace("/api/v3/repos", "");
+  console.log(
+    `generateGitHubUrl: url = ${url}, notificationId = ${notificationId}, userId = ${userId}, comment = ${comment}`,
+  );
+  let newUrl: string = url;
+
+  // Handle both GitHub Enterprise Cloud (subdomain) and Server (path-based) API patterns:
+  // GHEC: https://api.ghe.com/repos/org/repo/... -> https://ghe.com/org/repo/...
+  // GHES: https://ghe.com/api/v3/repos/org/repo/... -> https://ghe.com/org/repo/...
+
+  // First, handle GHEC subdomain pattern (api.domain.com -> domain.com)
+  newUrl = newUrl.replace(/^(https?:\/\/)api\./, "$1");
+
+  // Then, handle path-based patterns:
+  // - GHES: /api/v3/repos -> empty
+  // - GHEC: /repos/ -> / (after subdomain removal)
+  newUrl = newUrl.replace("/api/v3/repos", "").replace("/repos/", "/");
 
   if (newUrl.indexOf("/pulls/") !== -1) {
     newUrl = newUrl.replace("/pulls/", "/pull/");
@@ -47,8 +62,13 @@ export async function getGitHubURL(notification: Notification, userId?: string) 
     );
   } else if (notification.subject.type === "CheckSuite") {
     return generateGitHubUrl(`${notification.repository.html_url}/actions`, notification.id, userId);
+  } else if (notification.subject.type === "WorkflowRun") {
+    console.log(`notification: ${JSON.stringify({ ...notification, repository: undefined }, null, 2)}`);
+    // https://github.schibsted.io/spt-advertising/ate-eks/actions/runs/${runId}?notification_referrer_id=${ReferrerId}
+    // return generateGitHubUrl(`${notification.repository.html_url}/actions`, notification.id, userId);
+    return `${notification.repository.html_url}/actions`;
   }
-
+  console.error("Unknown notification type", notification);
   return notification.url;
 }
 
@@ -201,6 +221,6 @@ export function getNotificationTooltip(date: Date) {
 export function getGitHubIcon(isUnread = false) {
   return {
     source: isUnread ? "github-unread.svg" : "github.svg",
-    tintColor: Color.PrimaryText,
+    // tintColor: Color.PrimaryText,
   };
 }

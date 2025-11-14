@@ -19372,6 +19372,8 @@ export enum RepositoryLockReason {
   Rename = "RENAME",
   /** The repository is locked due to a trade controls related reason. */
   TradeRestriction = "TRADE_RESTRICTION",
+  /** The repository is locked due to an ownership transfer. */
+  TransferringOwnership = "TRANSFERRING_OWNERSHIP",
 }
 
 /** A GitHub Enterprise Importer (GEI) repository migration. */

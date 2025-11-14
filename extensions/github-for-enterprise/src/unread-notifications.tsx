@@ -71,8 +71,10 @@ function UnreadNotifications() {
     try {
       const openAndMarkNotificationAsRead = async () => {
         if (notification.subject.type === "RepositoryInvitation") {
+          console.log("Notification type is RepositoryInvitation: ", JSON.stringify(notification, null, 2));
           open(`${notification.repository.html_url}/invitations`);
         } else {
+          console.log("Notification: ", JSON.stringify(notification, null, 2));
           await open(await getGitHubURL(notification, viewer?.id));
           await octokit.rest.activity.markThreadAsRead({ thread_id: parseInt(notification.id) });
         }
